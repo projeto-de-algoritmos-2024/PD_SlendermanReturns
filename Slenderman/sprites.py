@@ -198,16 +198,19 @@ class Enemy (pygame.sprite.Sprite):
         self.animate()
     
     def find_player(self):
-        # Atualiza o caminho usando Bellman-Ford
         start = (self.rect.x // TILESIZE, self.rect.y // TILESIZE)
         goal = (self.game.player.rect.x // TILESIZE, self.game.player.rect.y // TILESIZE)
+        
+        # Verificação rápida antes de executar Bellman-Ford
+        if not self.is_walkable(*goal) or start == goal:
+            self.path = []
+            return
+            
         self.path = self.bellman_ford(start, goal)
 
     def bellman_ford(self, start, goal):
-        # Inicializa distâncias e predecessores
         distances = {}
         predecessors = {}
-        # Obtém todas as coordenadas possíveis do tilemap
         nodes = [(x, y) for y in range(len(tilemap)) for x in range(len(tilemap[0]))]
         
         for node in nodes:
@@ -215,40 +218,47 @@ class Enemy (pygame.sprite.Sprite):
             predecessors[node] = None
         distances[start] = 0
 
-        # Relaxamento das arestas até V-1 vezes
+        # Passo de relaxamento com pesos
         for _ in range(len(nodes) - 1):
             updated = False
             for node in nodes:
                 x, y = node
                 if not self.is_walkable(x, y):
                     continue
-                # Verifica todos os vizinhos possíveis
+                    
+                # Obtém o peso do nó atual
+                current_tile = tilemap[y][x]
+                current_weight = TILE_WEIGHTS.get(current_tile, 1)
+
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     neighbor = (x + dx, y + dy)
                     if self.is_walkable(neighbor[0], neighbor[1]):
-                        # Atualiza a distância se encontrar um caminho mais curto
-                        if distances[neighbor] > distances[node] + 1:
-                            distances[neighbor] = distances[node] + 1
+                        # Obtém o peso da aresta (vizinho)
+                        neighbor_tile = tilemap[neighbor[1]][neighbor[0]]
+                        edge_weight = TILE_WEIGHTS.get(neighbor_tile, 1)
+
+                        # Relaxamento considerando o peso
+                        if distances[neighbor] > distances[node] + edge_weight:
+                            distances[neighbor] = distances[node] + edge_weight
                             predecessors[neighbor] = node
                             updated = True
             if not updated:
-                break  # Otimização: para se não houver mais atualizações
+                break
 
-        # Reconstrói o caminho do goal até o start
+        # Reconstrução do caminho (mantido igual)
         path = []
         current = goal
         if distances.get(goal, float('inf')) == float('inf'):
-            return path  # Caminho inalcançável
+            return path
 
         while current != start:
             path.append(current)
             current = predecessors.get(current)
             if current is None:
-                return []  # Não há caminho
+                return []
 
         path.reverse()
-        return path[1:] if len(path) > 1 else []  # Exclui a posição inicial
-
+        return path[1:] if len(path) > 1 else []
 
     def is_walkable(self, x, y):
         # Verifica se a célula é caminhável (não é um bloco)
