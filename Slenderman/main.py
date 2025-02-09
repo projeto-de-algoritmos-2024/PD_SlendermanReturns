@@ -2,13 +2,20 @@ import pygame
 from config import *
 from sprites import *
 import sys
+import os
 
 class Game:
     def __init__(self):
+        os.environ['SDL_VIDEO_CENTERED'] = '1'  # Centraliza a janela
         pygame.init()
         pygame.mixer.init()
 
-        self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT), pygame.RESIZABLE)
+        # Configurar a tela em modo FULLSCREEN
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen_rect = self.screen.get_rect()
+        # Superfície virtual para renderizar o jogo na resolução original
+        self.game_surface = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))
+        
         self.clock = pygame.time.Clock()
         self.running = True
         self.font = pygame.font.Font('./Slender.ttf', 32)
@@ -78,20 +85,28 @@ class Game:
 
     def update(self):
         self.all_sprites.update()
-        if self.player.rect.centerx or self.player.rect.centery:  # Verifica se o jogador está se movendo
-            self.draw_lantern(self.player)
-    
+        # Mantém a câmera centralizada no jogador
+        self.camera_x = self.player.rect.centerx - WIN_WIDTH // 2
+        self.camera_y = self.player.rect.centery - WIN_HEIGHT // 2
+        
     def draw(self):
-        self.screen.fill(BLACK)
-        self.draw_lantern(self.player)
-        self.all_sprites.draw(self.screen)
+        self.game_surface.fill(BLACK)
 
+        # Desenha os elementos ajustados pela câmera
+        for sprite in self.all_sprites:
+            self.game_surface.blit(sprite.image, (sprite.rect.x - self.camera_x, sprite.rect.y - self.camera_y))
+
+        # Desenha o placar
         score_text = self.font.render(f"{self.notes_collected}/{self.total_notes}", True, WHITE)
         score_rect = score_text.get_rect(topright=(WIN_WIDTH - 10, 10))
-        self.screen.blit(score_text, score_rect)
+        self.game_surface.blit(score_text, score_rect)
 
-        self.clock.tick(FPS)
+        # Escala e desenha na tela principal
+        scaled_surface = pygame.transform.scale(self.game_surface, (self.screen_rect.width, self.screen_rect.height))
+        self.screen.blit(scaled_surface, (0, 0))
+
         pygame.display.update()
+        self.clock.tick(FPS)
 
     def main(self):
         while self.playing:
