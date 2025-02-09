@@ -39,6 +39,7 @@ TILE_WEIGHTS = {
     '.': 1,   # chão normal
     'E': 1,   # célula onde um inimigo pode estar (apesar de ser gerada dinamicamente, o valor pode ser 1)
     'N': 3,   # notas podem ter um custo um pouco maior (fazendo o Slenderman “evitar” esses caminhos, se for desejado)
-    'P': 1,   # célula do jogador (destino final do pathfinding)
+    'P': 1,
+    'B': 999   # célula do jogador (destino final do pathfinding)
     # outros tipos de tile podem ser adicionados aqui se necessário
 }

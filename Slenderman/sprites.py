@@ -189,20 +189,26 @@ class Enemy (pygame.sprite.Sprite):
         self.y_change = 0
 
         self.facing = "down"
-
+        self.last_path_update = 0
+        self.path_update_interval = 1000
 
     def update(self):
         self.speed = ENEMY_SPEED + self.game.notes_collected * 0.1
-        self.find_player()
+        now = pygame.time.get_ticks()
+        if now - self.last_path_update > self.path_update_interval:
+            self.find_player()
+            self.last_path_update = now
         self.move_along_path()
         self.animate()
     
     def find_player(self):
         start = (self.rect.x // TILESIZE, self.rect.y // TILESIZE)
         goal = (self.game.player.rect.x // TILESIZE, self.game.player.rect.y // TILESIZE)
-        
-        # Verificação rápida antes de executar Bellman-Ford
-        if not self.is_walkable(*goal) or start == goal:
+    
+        # Verificação adicional de posição válida
+        if (not self.is_walkable(*goal) or 
+            not self.is_walkable(*start) or 
+            start == goal):
             self.path = []
             return
             
@@ -261,11 +267,11 @@ class Enemy (pygame.sprite.Sprite):
         return path[1:] if len(path) > 1 else []
 
     def is_walkable(self, x, y):
-        # Verifica se a célula é caminhável (não é um bloco)
-        return 0 <= x < len(tilemap[0]) and 0 <= y < len(tilemap) and tilemap[y][x] != 'B'
+        if 0 <= x < len(tilemap[0]) and 0 <= y < len(tilemap):
+            return TILE_WEIGHTS.get(tilemap[y][x], 1) < 50
+        return False
 
     def move_along_path(self):
-        # Move o inimigo ao longo do caminho encontrado
         if self.path:
             next_x, next_y = self.path[0]
             next_x *= TILESIZE
@@ -274,19 +280,18 @@ class Enemy (pygame.sprite.Sprite):
             dx = next_x - self.rect.x
             dy = next_y - self.rect.y
 
-            if dx > 0:
-                self.rect.x += min(self.speed, dx)
-            elif dx < 0:
-                self.rect.x += max(-self.speed, dx)
+            # Movimento suave com tolerância
+            if abs(dx) > 0:
+                self.rect.x += min(self.speed, abs(dx)) * (dx/abs(dx))
+            if abs(dy) > 0:
+                self.rect.y += min(self.speed, abs(dy)) * (dy/abs(dy))
 
-            if dy > 0:
-                self.rect.y += min(self.speed, dy)
-            elif dy < 0:
-                self.rect.y += max(-self.speed, dy)
-
-            # Remove o próximo passo se atingido
-            if self.rect.x == next_x and self.rect.y == next_y:
+            # Verificação com margem de erro
+            if abs(self.rect.x - next_x) < 2 and abs(self.rect.y - next_y) < 2:
+                self.rect.x = next_x
+                self.rect.y = next_y
                 self.path.pop(0)
+
 
     def movement(self):
         if self.facing == "left":
