@@ -104,6 +104,25 @@ class Player(pygame.sprite.Sprite):
         if hits:
             self.game.notes_collected += 1
 
+            # Teletransporte dos inimigos a partir da 5ª página
+            if self.game.notes_collected >= 3:
+                player_block_x = self.rect.x // TILESIZE
+                player_block_y = self.rect.y // TILESIZE
+                
+                for enemy in self.game.enemies:
+                    enemy_block_x = enemy.rect.x // TILESIZE
+                    enemy_block_y = enemy.rect.y // TILESIZE
+                    
+                    # Calcula distância em blocos
+                    distance = abs(enemy_block_x - player_block_x) + abs(enemy_block_y - player_block_y)
+                    
+                    if distance > 13:
+                        new_pos = enemy.find_teleport_position(player_block_x, player_block_y)
+                        if new_pos:
+                            enemy.rect.x = new_pos[0] * TILESIZE
+                            enemy.rect.y = new_pos[1] * TILESIZE
+                            enemy.path = []  # Reseta o caminho
+
             if self.game.notes_collected == self.game.total_notes:
                 self.game.playing = False 
                 self.game.show_victory_screen()
@@ -191,6 +210,24 @@ class Enemy (pygame.sprite.Sprite):
         self.facing = "down"
         self.last_path_update = 0
         self.path_update_interval = 1000
+
+    def find_teleport_position(self, player_x, player_y):
+        directions = [
+            (8, 0), (-8, 0), (0, 8), (0, -8),
+            (7, 7), (-7, 7), (7, -7), (-7, -7)
+        ]
+        
+        for dx, dy in directions:
+            new_x = player_x + dx
+            new_y = player_y + dy
+            if self.is_valid_teleport_position(new_x, new_y):
+                return (new_x, new_y)
+        return None
+
+    def is_valid_teleport_position(self, x, y):
+        if 0 <= x < len(tilemap[0]) and 0 <= y < len(tilemap):
+            return tilemap[y][x] != 'B' and TILE_WEIGHTS.get(tilemap[y][x], 1) < 50
+        return False
 
     def update(self):
         self.speed = ENEMY_SPEED + self.game.notes_collected * 0.1
