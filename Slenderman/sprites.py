@@ -198,35 +198,57 @@ class Enemy (pygame.sprite.Sprite):
         self.animate()
     
     def find_player(self):
-        # Reinicia o caminho a cada atualização
-        self.path = self.bfs((self.rect.x // TILESIZE, self.rect.y // TILESIZE),
-                             (self.game.player.rect.x // TILESIZE, self.game.player.rect.y // TILESIZE))
+        # Atualiza o caminho usando Bellman-Ford
+        start = (self.rect.x // TILESIZE, self.rect.y // TILESIZE)
+        goal = (self.game.player.rect.x // TILESIZE, self.game.player.rect.y // TILESIZE)
+        self.path = self.bellman_ford(start, goal)
 
-    def bfs(self, start, goal):
-        # BFS para encontrar o caminho mais curto até o jogador
-        queue = deque([start])
-        visited = {start: None}
+    def bellman_ford(self, start, goal):
+        # Inicializa distâncias e predecessores
+        distances = {}
+        predecessors = {}
+        # Obtém todas as coordenadas possíveis do tilemap
+        nodes = [(x, y) for y in range(len(tilemap)) for x in range(len(tilemap[0]))]
+        
+        for node in nodes:
+            distances[node] = float('inf')
+            predecessors[node] = None
+        distances[start] = 0
 
-        while queue:
-            current = queue.popleft()
-            if current == goal:
-                break
+        # Relaxamento das arestas até V-1 vezes
+        for _ in range(len(nodes) - 1):
+            updated = False
+            for node in nodes:
+                x, y = node
+                if not self.is_walkable(x, y):
+                    continue
+                # Verifica todos os vizinhos possíveis
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    neighbor = (x + dx, y + dy)
+                    if self.is_walkable(neighbor[0], neighbor[1]):
+                        # Atualiza a distância se encontrar um caminho mais curto
+                        if distances[neighbor] > distances[node] + 1:
+                            distances[neighbor] = distances[node] + 1
+                            predecessors[neighbor] = node
+                            updated = True
+            if not updated:
+                break  # Otimização: para se não houver mais atualizações
 
-            x, y = current
-            neighbors = [(x + dx, y + dy) for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
-
-            for neighbor in neighbors:
-                if neighbor not in visited and self.is_walkable(*neighbor):
-                    visited[neighbor] = current
-                    queue.append(neighbor)
-
+        # Reconstrói o caminho do goal até o start
         path = []
-        while goal and goal in visited:
-            path.append(goal)
-            goal = visited[goal]
-        path.reverse()
+        current = goal
+        if distances.get(goal, float('inf')) == float('inf'):
+            return path  # Caminho inalcançável
 
-        return path[1:] if len(path) > 1 else []  # Retorna o próximo passo
+        while current != start:
+            path.append(current)
+            current = predecessors.get(current)
+            if current is None:
+                return []  # Não há caminho
+
+        path.reverse()
+        return path[1:] if len(path) > 1 else []  # Exclui a posição inicial
+
 
     def is_walkable(self, x, y):
         # Verifica se a célula é caminhável (não é um bloco)
