@@ -1,7 +1,7 @@
 WIN_WIDTH = 620
 WIN_HEIGHT = 465
 TILESIZE = 31
-FPS = 120
+FPS = 200
 
 PLAYER_LAYER = 4
 ENEMY_LAYER = 3
@@ -31,24 +31,12 @@ tilemap = [
     'BBBBBBBBBBB....BB..........BB..BB....BBBBBBBBBB......BB........BBBBBBBBBBBBBBBBB',
     'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
     'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBB....BB..........BB..BB....................BB........BBBBBBBBBBBBBBBBB',
     'BBBBBBBBBBB......BB........BB..BB.........P..........BB........BBBBBBBBBBBBBBBBB',
     'BBBBBBBBBBB........BB......BB..BB....................BB........BBBBBBBBBBBBBBBBB',
     'BBBBBBBBBBBBBB.........B.............BB...BB....BB................BBBBBBBBBBBBBB',
     'BBBBBBBBBBBNBB...BB.................BB....BB....BB.................BBBBBBBBBBBBB',
     'BBBBBBBBBBB.......BB............BBBBB......BB....BB..B..............NBBBBBBBBBBB',
     'BBBBBBBBBBBB.......BB.......BBB..................BB.....B........BBBBBBBBBBBBBBB',
-    'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
-    'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
-    'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
-    'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
-    'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
     'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
     'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
     'BBBBBBBBBBBB........BB......BBB..................BB.....B........BBBBBBBBBBBBBBB',
@@ -77,6 +65,7 @@ tilemap = [
     'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
     'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
 ]
+
 
 # Definição dos pesos para cada tipo de tile (você pode ajustar conforme desejado)
 TILE_WEIGHTS = {
