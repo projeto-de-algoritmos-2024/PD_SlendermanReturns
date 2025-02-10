@@ -105,7 +105,7 @@ class Player(pygame.sprite.Sprite):
             self.game.notes_collected += 1
 
             # Teletransporte dos inimigos a partir da 5ª página
-            if self.game.notes_collected >= 3:
+            if self.game.notes_collected >= 1:
                 player_block_x = self.rect.x // TILESIZE
                 player_block_y = self.rect.y // TILESIZE
                 
@@ -116,7 +116,7 @@ class Player(pygame.sprite.Sprite):
                     # Calcula distância em blocos
                     distance = abs(enemy_block_x - player_block_x) + abs(enemy_block_y - player_block_y)
                     
-                    if distance > 13:
+                    if distance > 6:
                         new_pos = enemy.find_teleport_position(player_block_x, player_block_y)
                         if new_pos:
                             enemy.rect.x = new_pos[0] * TILESIZE
@@ -213,7 +213,7 @@ class Enemy (pygame.sprite.Sprite):
 
     def find_teleport_position(self, player_x, player_y):
         directions = [
-            (8, 0), (-8, 0), (0, 8), (0, -8),
+            (5, 0), (-5, 0), (0, 5), (0, -5),
             (7, 7), (-7, 7), (7, -7), (-7, -7)
         ]
         

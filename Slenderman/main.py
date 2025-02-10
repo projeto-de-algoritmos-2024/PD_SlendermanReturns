@@ -33,18 +33,23 @@ class Game:
         self.go_background = pygame.image.load('./img/gameover.png')
         self.notes_spritesheet = Spritesheet ('./img/paper.png')
 
-        self.lantern_radius = 200  # Raio da lanterna
+        self.lantern_radius = 130  # Raio da lanterna
         self.lantern_surface = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))  # Superfície para a lanterna
         self.lantern_surface.fill((0, 0, 0))
 
     def draw_lantern(self, player):
-        # Criar um círculo transparente onde a lanterna ilumina
-        self.lantern_surface.fill((0, 0, 0))  # Limpa a superfície
-        pygame.draw.circle(self.lantern_surface, (0, 0, 0), (player.rect.centerx, player.rect.centery), self.lantern_radius)
-        self.lantern_surface.set_colorkey((0, 0, 0))  # Define a cor preta como transparente
+        mask = pygame.Surface((WIN_WIDTH, WIN_HEIGHT), pygame.SRCALPHA)
+        mask.fill((0, 0, 0, 250))  
+
+        center_x = player.rect.centerx - self.camera_x
+        center_y = player.rect.centery - self.camera_y
         
-        # Desenhar a máscara de lanterna sobre a tela
-        self.screen.blit(self.lantern_surface, (0, 0))
+        # Criar gradiente para um efeito suave
+        for radius in range(self.lantern_radius, self.lantern_radius - 40, -5):
+            alpha = int(255 * (1 - (self.lantern_radius - radius) / 40))
+            pygame.draw.circle(mask, (0, 0, 0, alpha), (center_x, center_y), radius)
+
+        self.game_surface.blit(mask, (0, 0))  
 
     def createTilemap(self):
         for i, row in enumerate(tilemap):
@@ -92,16 +97,19 @@ class Game:
     def draw(self):
         self.game_surface.fill(BLACK)
 
-        # Desenha os elementos ajustados pela câmera
+        # Desenha todos os elementos do jogo
         for sprite in self.all_sprites:
             self.game_surface.blit(sprite.image, (sprite.rect.x - self.camera_x, sprite.rect.y - self.camera_y))
 
-        # Desenha o placar
+        # Aplica o efeito de lanterna antes do placar
+        self.draw_lantern(self.player)
+
+        # Desenha o placar depois da lanterna para que fique visível
         score_text = self.font.render(f"{self.notes_collected}/{self.total_notes}", True, WHITE)
         score_rect = score_text.get_rect(topright=(WIN_WIDTH - 10, 10))
         self.game_surface.blit(score_text, score_rect)
 
-        # Escala e desenha na tela principal
+        # Escala para a tela principal
         scaled_surface = pygame.transform.scale(self.game_surface, (self.screen_rect.width, self.screen_rect.height))
         self.screen.blit(scaled_surface, (0, 0))
 
