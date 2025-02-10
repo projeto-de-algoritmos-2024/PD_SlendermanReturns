@@ -104,7 +104,6 @@ class Player(pygame.sprite.Sprite):
         if hits:
             self.game.notes_collected += 1
 
-            # Teletransporte dos inimigos a partir da 5ª página
             if self.game.notes_collected >= 1:
                 player_block_x = self.rect.x // TILESIZE
                 player_block_y = self.rect.y // TILESIZE

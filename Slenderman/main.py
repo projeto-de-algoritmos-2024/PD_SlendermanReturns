@@ -23,6 +23,9 @@ class Game:
         pygame.mixer.music.load('audio/background_music.mp3')
         pygame.mixer.music.set_volume(0.8)
 
+        self.last_static_time = 0  # Timestamp da última execução do efeito
+        self.static_cooldown = 15000 
+
         self.notes_collected = 0
         self.total_notes = 7
 
@@ -37,6 +40,10 @@ class Game:
         self.lantern_surface = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))  # Superfície para a lanterna
         self.lantern_surface.fill((0, 0, 0))
 
+        self.static_image = pygame.image.load('./img/static_effect.png').convert()
+
+        self.static_sound = pygame.mixer.Sound('./audio/static_sound.wav')
+
     def draw_lantern(self, player):
         mask = pygame.Surface((WIN_WIDTH, WIN_HEIGHT), pygame.SRCALPHA)
         mask.fill((0, 0, 0, 250))  
@@ -50,6 +57,47 @@ class Game:
             pygame.draw.circle(mask, (0, 0, 0, alpha), (center_x, center_y), radius)
 
         self.game_surface.blit(mask, (0, 0))  
+
+    def show_static_effect(self):
+        self.static_sound.play()  # Toca o som
+        start_time = pygame.time.get_ticks()
+
+        # Redimensiona e ajusta a imagem para canal alfa
+        static_fullscreen = pygame.transform.scale(self.static_image, (self.screen_rect.width, self.screen_rect.height)).convert_alpha()
+        static_fullscreen.set_alpha(4)  # Define opacidade (0 a 255)
+
+        while pygame.time.get_ticks() - start_time < 1000:  # Exibe por 1 segundo
+            self.screen.blit(static_fullscreen, (0, 0))  # Renderiza diretamente na tela
+            pygame.display.update()
+            self.clock.tick(60)
+
+        self.static_sound.stop()
+
+    def show_static_effect_with_fade(self):
+        self.static_sound.play()  # Toca o som
+        start_time = pygame.time.get_ticks()
+        
+        # Redimensiona e ajusta a imagem para canal alfa
+        static_fullscreen = pygame.transform.scale(
+            self.static_image, 
+            (self.screen_rect.width, self.screen_rect.height)
+        ).convert_alpha()
+
+        duration = 4000  # 4 segundos
+        max_alpha = 255  # Opacidade máxima
+
+        while pygame.time.get_ticks() - start_time < duration:
+            elapsed_time = pygame.time.get_ticks() - start_time
+            alpha = int((elapsed_time / duration) * max_alpha)  # Calcula a opacidade crescente
+
+            static_fullscreen.set_alpha(alpha)
+            self.screen.blit(static_fullscreen, (0, 0))
+            
+            pygame.display.update()
+            self.clock.tick(60)
+
+        self.static_sound.stop()
+
 
     def createTilemap(self):
         for i, row in enumerate(tilemap):
@@ -90,9 +138,22 @@ class Game:
 
     def update(self):
         self.all_sprites.update()
+
         # Mantém a câmera centralizada no jogador
         self.camera_x = self.player.rect.centerx - WIN_WIDTH // 2
         self.camera_y = self.player.rect.centery - WIN_HEIGHT // 2
+
+        # Verifica a proximidade com os inimigos (Slenderman)
+        current_time = pygame.time.get_ticks()
+        for enemy in self.enemies:
+            distance = math.sqrt((self.player.rect.centerx - enemy.rect.centerx) ** 2 + 
+                                  (self.player.rect.centery - enemy.rect.centery) ** 2)
+
+            # Se Slenderman está próximo e cooldown passou
+            if distance < 10 * 32 and current_time - self.last_static_time > self.static_cooldown:
+                self.show_static_effect()
+                self.last_static_time = current_time
+                break
         
     def draw(self):
         self.game_surface.fill(BLACK)
@@ -123,6 +184,7 @@ class Game:
             self.draw()
 
     def game_over(self):
+        self.show_static_effect_with_fade()
         large_font = pygame.font.Font('./Slender.ttf', 64)
         
         text = large_font.render('Game Over', True, WHITE)
