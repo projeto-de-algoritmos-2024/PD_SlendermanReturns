@@ -133,8 +133,13 @@ class Game:
     def events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.playing = False
-                self.running = False
+                pygame.quit()
+                sys.exit()  # Encerra o programa imediatamente
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    desktop_size = pygame.display.get_desktop_sizes()[0]  # Obtém a resolução da tela
+                    self.screen = pygame.display.set_mode((desktop_size[0] // 2, desktop_size[1] // 2), pygame.RESIZABLE)
+                    os.environ['SDL_VIDEO_CENTERED'] = '1'
 
     def update(self):
         self.all_sprites.update()
