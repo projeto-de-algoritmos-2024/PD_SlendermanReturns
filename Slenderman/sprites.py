@@ -104,6 +104,24 @@ class Player(pygame.sprite.Sprite):
         if hits:
             self.game.notes_collected += 1
 
+            if self.game.notes_collected >= 1:
+                player_block_x = self.rect.x // TILESIZE
+                player_block_y = self.rect.y // TILESIZE
+                
+                for enemy in self.game.enemies:
+                    enemy_block_x = enemy.rect.x // TILESIZE
+                    enemy_block_y = enemy.rect.y // TILESIZE
+                    
+                    # Calcula distância em blocos
+                    distance = abs(enemy_block_x - player_block_x) + abs(enemy_block_y - player_block_y)
+                    
+                    if distance > 6:
+                        new_pos = enemy.find_teleport_position(player_block_x, player_block_y)
+                        if new_pos:
+                            enemy.rect.x = new_pos[0] * TILESIZE
+                            enemy.rect.y = new_pos[1] * TILESIZE
+                            enemy.path = []  # Reseta o caminho
+
             if self.game.notes_collected == self.game.total_notes:
                 self.game.playing = False 
                 self.game.show_victory_screen()
@@ -189,51 +207,107 @@ class Enemy (pygame.sprite.Sprite):
         self.y_change = 0
 
         self.facing = "down"
+        self.last_path_update = 0
+        self.path_update_interval = 1000
 
+    def find_teleport_position(self, player_x, player_y):
+        directions = [
+            (5, 0), (-5, 0), (0, 5), (0, -5),
+            (7, 7), (-7, 7), (7, -7), (-7, -7)
+        ]
+        
+        for dx, dy in directions:
+            new_x = player_x + dx
+            new_y = player_y + dy
+            if self.is_valid_teleport_position(new_x, new_y):
+                return (new_x, new_y)
+        return None
+
+    def is_valid_teleport_position(self, x, y):
+        if 0 <= x < len(tilemap[0]) and 0 <= y < len(tilemap):
+            return tilemap[y][x] != 'B' and TILE_WEIGHTS.get(tilemap[y][x], 1) < 50
+        return False
 
     def update(self):
         self.speed = ENEMY_SPEED + self.game.notes_collected * 0.1
-        self.find_player()
+        now = pygame.time.get_ticks()
+        if now - self.last_path_update > self.path_update_interval:
+            self.find_player()
+            self.last_path_update = now
         self.move_along_path()
         self.animate()
     
     def find_player(self):
-        # Reinicia o caminho a cada atualização
-        self.path = self.bfs((self.rect.x // TILESIZE, self.rect.y // TILESIZE),
-                             (self.game.player.rect.x // TILESIZE, self.game.player.rect.y // TILESIZE))
+        start = (self.rect.x // TILESIZE, self.rect.y // TILESIZE)
+        goal = (self.game.player.rect.x // TILESIZE, self.game.player.rect.y // TILESIZE)
+    
+        # Verificação adicional de posição válida
+        if (not self.is_walkable(*goal) or 
+            not self.is_walkable(*start) or 
+            start == goal):
+            self.path = []
+            return
+            
+        self.path = self.bellman_ford(start, goal)
 
-    def bfs(self, start, goal):
-        # BFS para encontrar o caminho mais curto até o jogador
-        queue = deque([start])
-        visited = {start: None}
+    def bellman_ford(self, start, goal):
+        distances = {}
+        predecessors = {}
+        nodes = [(x, y) for y in range(len(tilemap)) for x in range(len(tilemap[0]))]
+        
+        for node in nodes:
+            distances[node] = float('inf')
+            predecessors[node] = None
+        distances[start] = 0
 
-        while queue:
-            current = queue.popleft()
-            if current == goal:
+        # Passo de relaxamento com pesos
+        for _ in range(len(nodes) - 1):
+            updated = False
+            for node in nodes:
+                x, y = node
+                if not self.is_walkable(x, y):
+                    continue
+                    
+                # Obtém o peso do nó atual
+                current_tile = tilemap[y][x]
+                current_weight = TILE_WEIGHTS.get(current_tile, 1)
+
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    neighbor = (x + dx, y + dy)
+                    if self.is_walkable(neighbor[0], neighbor[1]):
+                        # Obtém o peso da aresta (vizinho)
+                        neighbor_tile = tilemap[neighbor[1]][neighbor[0]]
+                        edge_weight = TILE_WEIGHTS.get(neighbor_tile, 1)
+
+                        # Relaxamento considerando o peso
+                        if distances[neighbor] > distances[node] + edge_weight:
+                            distances[neighbor] = distances[node] + edge_weight
+                            predecessors[neighbor] = node
+                            updated = True
+            if not updated:
                 break
 
-            x, y = current
-            neighbors = [(x + dx, y + dy) for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
-
-            for neighbor in neighbors:
-                if neighbor not in visited and self.is_walkable(*neighbor):
-                    visited[neighbor] = current
-                    queue.append(neighbor)
-
+        # Reconstrução do caminho (mantido igual)
         path = []
-        while goal and goal in visited:
-            path.append(goal)
-            goal = visited[goal]
-        path.reverse()
+        current = goal
+        if distances.get(goal, float('inf')) == float('inf'):
+            return path
 
-        return path[1:] if len(path) > 1 else []  # Retorna o próximo passo
+        while current != start:
+            path.append(current)
+            current = predecessors.get(current)
+            if current is None:
+                return []
+
+        path.reverse()
+        return path[1:] if len(path) > 1 else []
 
     def is_walkable(self, x, y):
-        # Verifica se a célula é caminhável (não é um bloco)
-        return 0 <= x < len(tilemap[0]) and 0 <= y < len(tilemap) and tilemap[y][x] != 'B'
+        if 0 <= x < len(tilemap[0]) and 0 <= y < len(tilemap):
+            return TILE_WEIGHTS.get(tilemap[y][x], 1) < 50
+        return False
 
     def move_along_path(self):
-        # Move o inimigo ao longo do caminho encontrado
         if self.path:
             next_x, next_y = self.path[0]
             next_x *= TILESIZE
@@ -242,19 +316,18 @@ class Enemy (pygame.sprite.Sprite):
             dx = next_x - self.rect.x
             dy = next_y - self.rect.y
 
-            if dx > 0:
-                self.rect.x += min(self.speed, dx)
-            elif dx < 0:
-                self.rect.x += max(-self.speed, dx)
+            # Movimento suave com tolerância
+            if abs(dx) > 0:
+                self.rect.x += min(self.speed, abs(dx)) * (dx/abs(dx))
+            if abs(dy) > 0:
+                self.rect.y += min(self.speed, abs(dy)) * (dy/abs(dy))
 
-            if dy > 0:
-                self.rect.y += min(self.speed, dy)
-            elif dy < 0:
-                self.rect.y += max(-self.speed, dy)
-
-            # Remove o próximo passo se atingido
-            if self.rect.x == next_x and self.rect.y == next_y:
+            # Verificação com margem de erro
+            if abs(self.rect.x - next_x) < 2 and abs(self.rect.y - next_y) < 2:
+                self.rect.x = next_x
+                self.rect.y = next_y
                 self.path.pop(0)
+
 
     def movement(self):
         if self.facing == "left":
