@@ -18,6 +18,7 @@ class Game:
         
         self.clock = pygame.time.Clock()
         self.running = True
+        self.playing = False  # Inicialize o atributo 'playing'
         self.font = pygame.font.Font('./Slender.ttf', 32)
 
         pygame.mixer.music.load('audio/background_music.mp3')
@@ -97,7 +98,6 @@ class Game:
             self.clock.tick(60)
 
         self.static_sound.stop()
-
 
     def createTilemap(self):
         for i, row in enumerate(tilemap):
@@ -255,7 +255,6 @@ class Game:
             self.clock.tick(FPS)
             pygame.display.update()
 
-
     def intro_screen(self):
         intro = True
 
@@ -389,13 +388,15 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
+def main():
+    g = Game()
+    g.intro_screen()
+    g.new()
+    while g.running:
+        g.main()
+        g.game_over()
+    pygame.quit()
+    sys.exit()
 
-
-g = Game()
-g.intro_screen()
-g.new()
-while g.running:
-    g.main()
-    g.game_over()
-pygame.quit()
-sys.exit() 
+if __name__ == "__main__":
+    main()
