@@ -22,7 +22,7 @@ A programação dinâmica foi implementada no algoritmo de pathfinding do Slende
 
 | Tela de Introdução                         | Tela de Jogo                               |
 | ------------------------------------------ | ------------------------------------------ |
-| ![Intro](/PD_SlendermanReturns/Slenderman/img/inicial.png)                    | ![Game](/PD_SlendermanReturns/Slenderman/img/slender.png)                      |
+| ![Intro](/PD_SlendermanReturns/Slenderman/img/inicial.png)                    | ![Game](Slenderman/img/slender.png)                      |
 
 | Tela de Início do Jogo                     | Tela de Fim de Jogo                        |
 | ------------------------------------------ | ------------------------------------------ |
