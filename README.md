@@ -78,4 +78,4 @@ O jogo utiliza várias técnicas de programação dinâmica e otimização:
 
 Este projeto foi desenvolvido para aplicar conceitos de programação dinâmica em uma simulação prática de perseguição e busca.
 
-- [Vídeo de apresentação PD]()
+- [Vídeo de apresentação PD](https://youtu.be/qG1hgjTb4Wo)
