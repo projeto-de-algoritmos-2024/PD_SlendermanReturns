@@ -193,17 +193,18 @@ class Game:
         large_font = pygame.font.Font('./Slender.ttf', 64)
         
         text = large_font.render('Game Over', True, WHITE)
-        text_rect = text.get_rect(center=(WIN_WIDTH / 2, WIN_HEIGHT / 2 - 40))
+        text_rect = text.get_rect(center=(self.screen_rect.width // 2, self.screen_rect.height // 2 - 40))
 
         # Posição dos botões centralizados abaixo do texto de Game Over
         button_width, button_height = 150, 50
-        button_x = (WIN_WIDTH - button_width) // 2
-        restart_button_y = WIN_HEIGHT / 2 + 20
+        button_x = (self.screen_rect.width - button_width) // 2
+        restart_button_y = self.screen_rect.height // 2 + 20
         exit_button_y = restart_button_y + button_height + 20
 
         # Criação dos botões
         restart_button = Button(button_x, restart_button_y, button_width, button_height, WHITE, BLACK, 'Restart', 32)
         exit_button = Button(button_x, exit_button_y, button_width, button_height, WHITE, BLACK, 'Exit', 32)
+
 
         # Índice para controlar qual botão está selecionado
         selected_button_index = 0
