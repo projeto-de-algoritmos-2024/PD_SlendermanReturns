@@ -86,12 +86,12 @@ def show_instructions():
     while instruction_screen:
         screen.fill(BLACK)
         
-        draw_text_with_shadow("Instruções", font2, WHITE, BLACK, (WIDTH - font2.size("Instruções")[0]) // 2, HEIGHT // 6)
+        draw_text_with_shadow("Instrucoees", font2, WHITE, BLACK, (WIDTH - font2.size("Instrucoes")[0]) // 2, HEIGHT // 6)
         
         instructions = [
-            "O jogo se passa em um mundo distópico onde você é",
+            "O jogo se passa em um mundo distópico onde você eh",
             "perseguido por Slenderman.",
-            "Seu objetivo é coletar todas as notas sem ser pego",
+            "Seu objetivo eh coletar todas as notas sem ser pego",
             "para conseguir sobreviver.",
             "",
             "Controles:",
