@@ -68,13 +68,50 @@ class Button:
         return False
 
     # Criar botões com tamanhos e posições ajustados
+import pygame
+import sys
+from collections import defaultdict
+import main
+
+# ... (código anterior permanece o mesmo)
+
+# Atualizar a lista de botões
 buttons = [
     Button("Novo Jogo", (WIDTH - 350) // 2, HEIGHT - 200),
-    Button("Continuar", (WIDTH - 300) // 2 - 150, HEIGHT - 140),
-    Button("Instrucoes", (WIDTH - 300) // 2 + 150, HEIGHT - 140),
+    Button("Instrucoes", (WIDTH - 350) // 2, HEIGHT - 120)
 ]
 
-
+def show_instructions():
+    instruction_screen = True
+    while instruction_screen:
+        screen.fill(BLACK)
+        
+        draw_text_with_shadow("Instruções", font2, WHITE, BLACK, (WIDTH - font2.size("Instruções")[0]) // 2, HEIGHT // 6)
+        
+        instructions = [
+            "O jogo se passa em um mundo distópico onde você é",
+            "perseguido por Slenderman.",
+            "Seu objetivo é coletar todas as notas sem ser pego",
+            "para conseguir sobreviver.",
+            "",
+            "Controles:",
+            "W/Seta para cima: Mover para cima",
+            "S/Seta para baixo: Mover para baixo",
+            "A/Seta para esquerda: Mover para esquerda",
+            "D/Seta para direita: Mover para direita",
+            "ESC: Sair do jogo",
+            "",
+            "Pressione ESC para voltar ao menu principal"
+        ]
+        
+        for i, line in enumerate(instructions):
+            draw_text_with_shadow(line, small_font, WHITE, BLACK, WIDTH // 10, HEIGHT // 4 + i * 40)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                instruction_screen = False
+        
+        pygame.display.update()
 
 def start_game():
     game_instance = main.Game()
@@ -107,10 +144,8 @@ def main_menu():
                             pygame.quit()  # Encerra o Pygame atual
                             start_game()
                             return
-                        elif button.text == "Continuar":
-                            print("Continuar jogo...")
                         elif button.text == "Instrucoes":
-                            print("Mostrando instruções...")
+                            show_instructions()
 
         pygame.display.update()
 
@@ -118,3 +153,4 @@ def main_menu():
     sys.exit()
 
 main_menu()
+
